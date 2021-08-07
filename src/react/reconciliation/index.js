@@ -65,9 +65,12 @@ const executeTask = (fiber) => {
   let currentExecutelyFiber = fiber
   // 父级节点存在时，则一直构建，直到没有父级，表明已经到达了root节点
   while(currentExecutelyFiber.parent) {
+    currentExecutelyFiber.parent.effects = currentExecutelyFiber.parent.effects.concat(
+      currentExecutelyFiber.effects.concat([ currentExecutelyFiber ])
+    )
     // 如果存在兄弟节点，则构建兄弟节点
-    if (fiber.sibling) {
-      return fiber.sibling
+    if (currentExecutelyFiber.sibling) {
+      return currentExecutelyFiber.sibling
     }
     // 没有兄弟节点，则构建父级节点
     currentExecutelyFiber = currentExecutelyFiber.parent
