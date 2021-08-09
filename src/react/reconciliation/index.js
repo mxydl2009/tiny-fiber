@@ -18,6 +18,7 @@ let subTask = null
 
 let pendingCommit = null
 
+// fiber节点是root fiber节点，其中effects数组收集了所有的fiber节点
 const commitAllWork = fiber => {
   // 根据effects数组中的fiber关系（父子节点关系）构建DOM树
   fiber.effects.forEach(item => {
@@ -48,7 +49,7 @@ const commitAllWork = fiber => {
       item.parent.stateNode.removeChild(item.stateNode)
     }
   })
-  // 备份fiber对象到root节点，便于之后更新过程做对比
+  // 备份fiber对象到root DOM节点，便于之后更新过程做对比
   fiber.stateNode.__rootFiberContainer = fiber
 }
 
@@ -121,10 +122,10 @@ const reconcileChildren = (fiber, children) => {
         alternate
       }
       if (element.type === alternate.type) {
-        // 类型相同
+        // 类型相同，复用原来的DOM节点
         newFiber.stateNode = alternate.stateNode
       } else {
-        // 类型不同
+        // 类型不同，创建新的DOM节点
         newFiber.stateNode = createStateNode(newFiber)
       }
     } else if (element && !alternate) {
@@ -139,6 +140,7 @@ const reconcileChildren = (fiber, children) => {
         stateNode: null,
         parent: fiber,
       }
+      // 真实DOM对象
       newFiber.stateNode = createStateNode(newFiber)
     } else if (!element && alternate) {
       // 删除操作
@@ -173,7 +175,6 @@ const executeTask = (fiber) => {
         ...fiber.stateNode.state,
         ...fiber.stateNode.__fiber.partialState
       }
-      console.log('update state');
     }
     reconcileChildren(fiber, fiber.stateNode.render())
   } else if (fiber.tag === 'function_component') {
@@ -221,13 +222,14 @@ const workLoop = (deadline) => {
 
 const performTask = (deadline) => {
   workLoop(deadline)
+  // 当任务存在但空余时间不足时，workLoop函数会退出，然后继续注册空闲时间内的任务执行
   if (subTask || !taskQueueManger.isEmpty()) {
     requestIdleCallback(performTask)
   }
 }
 
 /**
- * 
+ * 将虚拟DOM渲染挂载到页面的dom元素中
  * @param {*} element 
  * @param {*} dom 
  */
