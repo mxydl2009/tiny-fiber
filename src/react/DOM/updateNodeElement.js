@@ -8,6 +8,24 @@ export default function updateNodeElement(newElement, virtualDOM, oldVirtualDOM)
   // get props
   const newProps = virtualDOM.props || {}
   const oldProps = oldVirtualDOM && oldVirtualDOM.props || {}
+
+  /**
+   * 处理文本节点
+   */
+  if (virtualDOM.type === 'text') {
+    if (newProps.textContent !== oldProps.textContent) {
+      // 更新文本节点
+      if (virtualDOM.parent.type !== oldVirtualDOM.parent.type) {
+        virtualDOM.parent.stateNode.appendChild(document.createTextNode(newProps.textContent))
+      } else {
+        virtualDOM.parent.stateNode.replaceChild(document.createTextNode(newProps.textContent), oldVirtualDOM.stateNode)
+      }
+    }
+    return
+  }
+  /**
+   * 处理元素节点
+   */
   // 按新的props来遍历，这样更新的属性值是新旧props共有的属性以及新的props新增的属性
   Object.keys(newProps).forEach((propName) => {
     const newPropValue = newProps[propName]
